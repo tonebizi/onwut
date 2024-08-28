@@ -24,11 +24,19 @@ onwut.main(start_date="2024-01", end_date="2024-12", search_string="産業")
 ```
 特定の年を指定して検索:
 ```python
-onwut.main(start_date="2023", search_string="エネルギー")
+onwut.main(start_date="2023", search_string="経済")
 ```
 日付を指定して検索
 ```python
 onwut.main(start_date="2024-01", end_date="2024-12")
+```
+
+## 出力例
+```
+タイトル: 鉱工業生産
+日付: 2024-01
+URL: https://www.meti.go.jp/statistics/tyo/iip/reference/b202401.pdf
+内容: 鉱工業生産は前年同月比で増加...
 ```
 ## 貢献
 このプロジェクトはオープンソースであり、コミュニティの皆様の貢献を歓迎しています。バグ修正、新機能の提案、ドキュメントの改善など、どのような貢献でも大歓迎です。
