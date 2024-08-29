@@ -1,10 +1,10 @@
-import sys
 import requests
 from bs4 import BeautifulSoup
 import re
 import PyPDF2
 from io import BytesIO
-from datetime import datetime, timedelta
+from datetime import datetime
+from .database import save_report
 
 def parse_dates(date_str):
     if re.match(r'^\d{4}-\d{2}$', date_str):
@@ -14,13 +14,7 @@ def parse_dates(date_str):
     else:
         raise ValueError(f"不正な日付フォーマットです: {date_str}")
 
-def main(start_date=None, end_date=None, search_string=None):
-    # 既存の parse_dates 関数を使って日付を変換
-    if isinstance(start_date, str):
-        start_date = parse_dates(start_date)
-    if isinstance(end_date, str):
-        end_date = parse_dates(end_date)
-
+def scrape_and_store_reports(conn, start_date=None, end_date=None, search_string=None):
     url = 'https://www.meti.go.jp/statistics/tyo/iip/kako_press.html'
     response = requests.get(url)
     response.raise_for_status()
@@ -35,13 +29,14 @@ def main(start_date=None, end_date=None, search_string=None):
             year_month = match.group(1)
             year = int(year_month[:4])
             month = int(year_month[4:])
-            file_date = datetime(year, month, 1)
-            
+            file_date = datetime(year, month, 1).strftime('%Y-%m')
+
+            # 日付範囲でフィルタリング
             if start_date and end_date:
                 if not (start_date <= file_date <= end_date):
                     continue
             elif start_date:
-                if not (start_date.year == file_date.year and start_date.month == file_date.month):
+                if not (start_date == file_date):
                     continue
 
             pdf_response = requests.get(pdf_url)
@@ -54,6 +49,6 @@ def main(start_date=None, end_date=None, search_string=None):
             if search_string and search_string not in pdf_text:
                 continue
 
-            formatted_date = f"{file_date.year}-{file_date.month:02}"
             preview_text = pdf_text[:30].replace("\n", " ")
-            print(f"タイトル: 鉱工業生産\n日付: {formatted_date}\nURL: {pdf_url}\n内容: {preview_text}...\n")
+            save_report(conn, "鉱工業生産", file_date, pdf_url, preview_text)
+            print(f"タイトル: 鉱工業生産\n日付: {file_date}\nURL: {pdf_url}\n内容: {preview_text}...\n")

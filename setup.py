@@ -4,7 +4,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="onwut",  # ライブラリの名前
-    version="0.4",
+    version="0.5",
     packages=find_packages(),  # パッケージを自動検出
     install_requires=[
         'requests',
