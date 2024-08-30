@@ -1,54 +1,37 @@
-import sys
-import re
-from datetime import datetime, timedelta
-from .database import init_db, get_reports
-from .scraper import scrape_and_store_reports, parse_dates
+import sqlite3
+import os
 
-def main(start_date=None, end_date=None, search_string=None, scrape=False):
-    conn = init_db()
+def fetch_data(search_string=None, start_date=None, end_date=None, db_path='onwut_data.db'):
+    if not os.path.exists(db_path):
+        raise FileNotFoundError(f"データベースファイルが見つかりません: {db_path}")
+    
+    conn = sqlite3.connect(db_path)
+    cursor = conn.cursor()
 
-    if scrape:
-        scrape_and_store_reports(conn, start_date, end_date, search_string)
-    else:
-        reports = get_reports(conn, start_date, end_date, search_string)
-        for report in reports:
-            title, date, url, content_preview = report
-            print(f"タイトル: {title}\n日付: {date}\nURL: {url}\n内容: {content_preview}...\n")
+    query = "SELECT title, date, url, content FROM reports WHERE 1=1"
+    params = []
 
+    if search_string:
+        query += " AND content LIKE ?"
+        params.append(f"%{search_string}%")
+
+    if start_date:
+        query += " AND date >= ?"
+        params.append(start_date)
+
+    if end_date:
+        query += " AND date <= ?"
+        params.append(end_date)
+
+    cursor.execute(query, params)
+    results = cursor.fetchall()
     conn.close()
 
+    for row in results:
+        title, date, url, content = row
+        preview_content = content[:100]  # 最初の100文字のみを取得
+        print(f"タイトル: {title}\n日付: {date}\nURL: {url}\n内容: {preview_content}...\n")
+
 if __name__ == "__main__":
-    args = sys.argv[1:]
-    search_string = None
-    start_date = None
-    end_date = None
-    scrape = False
-
-    if len(args) == 0:
-        end_date = datetime.now().strftime('%Y-%m')
-        start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m')
-    elif len(args) == 1:
-        if re.match(r'^\d{4}(-\d{2})?$', args[0]):
-            start_date = parse_dates(args[0]).strftime('%Y-%m')
-            end_date = start_date
-        else:
-            search_string = args[0]
-            end_date = datetime.now().strftime('%Y-%m')
-            start_date = (datetime.now() - timedelta(days=365)).strftime('%Y-%m')
-    elif len(args) == 2:
-        start_date = parse_dates(args[0]).strftime('%Y-%m')
-        end_date = parse_dates(args[1]).strftime('%Y-%m')
-    elif len(args) == 3:
-        start_date = parse_dates(args[0]).strftime('%Y-%m')
-        end_date = parse_dates(args[1]).strftime('%Y-%m')
-        search_string = args[2]
-    elif len(args) == 4 and args[3] == "scrape":
-        start_date = parse_dates(args[0]).strftime('%Y-%m')
-        end_date = parse_dates(args[1]).strftime('%Y-%m')
-        search_string = args[2]
-        scrape = True
-    else:
-        print("使用方法: python script.py [開始日 [終了日]] [検索文字列] [scrape]")
-        sys.exit(1)
-
-    main(start_date, end_date, search_string, scrape)
+    # これはテスト用に使用するか、スクリプトとして直接実行する際にのみ適用
+    fetch_data(search_string="生産", start_date="2024-01", end_date="2024-12")

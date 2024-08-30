@@ -17,20 +17,20 @@ pip install onwut
 ## 使い方
 基本的な使い方は以下の通りです。指定した期間に「産業」というキーワードを含むレポートを検索します。
 ```python
-import onwut
+import onwut.main as onwut_main
+
+# 例: 2024年1月から2024年12月までの期間に該当するすべてのレポートを検索
+onwut_main.main(start_date="2024-01", end_date="2024-12", scrape=True)
+
+```
+
+```python
+import onwut.main as onwut_main
 
 # 例: 2024年1月から2024年12月までの期間に「産業」というキーワードを含むレポートを検索
-onwut.main(start_date="2024-01", end_date="2024-12", search_string="産業")
-```
-特定の年を指定して検索:
-```python
-onwut.main(start_date="2023", search_string="経済")
-```
-日付を指定して検索
-```python
-onwut.main(start_date="2024-01", end_date="2024-12")
-```
+onwut_main.main(start_date="2024-01", end_date="2024-12", search_string="産業", scrape=True)
 
+```
 ## 出力例
 ```
 タイトル: 鉱工業生産
